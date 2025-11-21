@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": ["Bash(find:*)"],
+    "deny": []
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "playwright",
+    "sequential-thinking",
+    "antv-chart",
+    "memory"
+  ],
+  "env": {
+    "HTTP_PROXY": "http://127.0.0.1:7890",
+    "HTTPS_PROXY": "http://127.0.0.1:7890",
+    "ANTHROPIC_AUTH_TOKEN": "sk-aRojckO9RzSgQXBtK0e3gZzWvJnuFi3a49uSVUw9HaWlPiyO",
+    "ANTHROPIC_BASE_URL": "https://api.moonshot.cn/anthropic/",
+    "ANTHROPIC_MODEL": "kimi-k2-0905-preview",
+    "ANTHROPIC_SMALL_FAST_MODEL": "kimi-k2-0905-preview"
+  }
+}

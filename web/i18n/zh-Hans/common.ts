@@ -628,7 +628,7 @@ const translation = {
   },
   datasetMenus: {
     documents: '文档',
-    hitTesting: '召回测试',
+    hitTesting: '检索与定位',
     settings: '设置',
     emptyTip: '此知识尚未集成到任何应用程序中。请参阅文档以获取指导。',
     viewDoc: '查看文档',

@@ -1,6 +1,6 @@
 const translation = {
-  title: '召回测试',
-  settingTitle: '召回设置',
+  title: '检索与定位',
+  settingTitle: '检索设置',
   desc: '根据给定的查询文本测试知识的召回效果。',
   dateTimeFormat: 'YYYY-MM-DD HH:mm',
   records: '记录',
@@ -20,7 +20,7 @@ const translation = {
   },
   hit: {
     title: '{{num}} 个召回段落',
-    emptyTip: '召回测试结果将展示在这里',
+    emptyTip: '检索与定位结果将展示在这里',
   },
   noRecentTip: '最近无查询结果',
   viewChart: '查看向量图表',

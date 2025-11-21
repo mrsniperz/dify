@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": ["Bash(find:*)"],
+    "deny": []
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "playwright",
+    "sequential-thinking",
+    "antv-chart",
+    "memory"
+  ],
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJzbmlwZXJ6IiwiVXNlck5hbWUiOiJzbmlwZXJ6IiwiQWNjb3VudCI6IiIsIlN1YmplY3RJRCI6IjE3NTIyNTQzOTI4NTA5ODA4NzMiLCJQaG9uZSI6IjE1OTcyMTI4ODg0IiwiR3JvdXBJRCI6IjE3NTIyNTQzOTI4NDI1OTIyNjUiLCJQYWdlTmFtZSI6IiIsIk1haWwiOiIiLCJDcmVhdGVUaW1lIjoiMjAyNS0xMC0zMCAwOTozMDoxMSIsIlRva2VuVHlwZSI6MSwiaXNzIjoibWluaW1heCJ9.mW-s5ivgI2EYPgPzTsgL2XxTu79M8Bhxj2o8jGyAJ9Z0NmlR_CDMhFeAFGU195TAcKIGmtnjuVhh9jTPj1ykbMVZLCHqRMEtI3Hlnm4jTlrDwSiI32Kn-xs8-gfNe_6hH_E_wAoJiAJufxA_0K8etZd6n7PiLMpPUdKFCgA313vIqU1u2fCE7qhmGwZ0nEhMIt3QZg1jRZjefI6d7Dkq2cBPK0qlNKd9RnN3XG6uQZgpu4zHXoA6PT4ccH-ZJLvpLzdfUl0I07zrW460pPEjrmy7ClvOd3RV93XTcv5ighHRp4rG3bD5r0zlUcaSPIJ25L6zh-7P4IeVG54isgZOcQ",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_MODEL": "MiniMax-M2",
+    "ANTHROPIC_SMALL_FAST_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2"
+  }
+}
