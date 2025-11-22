@@ -640,6 +640,9 @@ services:
     environment:
       # Use the shared environment variables.
       <<: *shared-api-worker-env
+      # 显式设置Redis主机和端口，覆盖系统环境变量
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # Startup mode, 'api' starts the API server.
       MODE: api
       SENTRY_DSN: ${API_SENTRY_DSN:-}
@@ -679,6 +682,9 @@ services:
     environment:
       # Use the shared environment variables.
       <<: *shared-api-worker-env
+      # 显式设置Redis主机和端口，覆盖系统环境变量
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # Startup mode, 'worker' starts the Celery worker for processing all queues.
       MODE: worker
       SENTRY_DSN: ${API_SENTRY_DSN:-}
@@ -716,6 +722,9 @@ services:
     environment:
       # Use the shared environment variables.
       <<: *shared-api-worker-env
+      # 显式设置Redis主机和端口，覆盖系统环境变量
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # Startup mode, 'worker_beat' starts the Celery beat for scheduling periodic tasks.
       MODE: beat
     depends_on:
@@ -881,6 +890,9 @@ services:
     environment:
       # Use the shared environment variables.
       <<: *shared-api-worker-env
+      # 显式设置Redis主机和端口，覆盖系统环境变量
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       DB_DATABASE: ${DB_PLUGIN_DATABASE:-dify_plugin}
       SERVER_PORT: ${PLUGIN_DAEMON_PORT:-5002}
       SERVER_KEY: ${PLUGIN_DAEMON_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}

@@ -1,34 +1,40 @@
 {
-    "mcpServers": {
-      "context7": {
-        "type": "http",
-        "url": "https://mcp.context7.com/mcp"
-      },
-      "sequential-thinking": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-        "env": {}
-      },
-      "github": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": {
-          "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-        }
-      },
-      "fetch": {
-        "type": "stdio",
-        "command": "uvx",
-        "args": ["mcp-server-fetch"],
-        "env": {}
-      },
-      "playwright": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@playwright/mcp@latest"],
-        "env": {}
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server", "--extension"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "antv-chart": {
+      "command": "npx",
+      "args": ["-y", "@antv/mcp-server-chart"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "MiniMax": {
+      "command": "uvx",
+      "args": ["minimax-coding-plan-mcp", "-y"],
+      "env": {
+        "MINIMAX_API_KEY": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJzbmlwZXJ6IiwiVXNlck5hbWUiOiJzbmlwZXJ6IiwiQWNjb3VudCI6IiIsIlN1YmplY3RJRCI6IjE3NTIyNTQzOTI4NTA5ODA4NzMiLCJQaG9uZSI6IjE1OTcyMTI4ODg0IiwiR3JvdXBJRCI6IjE3NTIyNTQzOTI4NDI1OTIyNjUiLCJQYWdlTmFtZSI6IiIsIk1haWwiOiIiLCJDcmVhdGVUaW1lIjoiMjAyNS0xMS0xNyAxMDo1ODowMCIsIlRva2VuVHlwZSI6NCwiaXNzIjoibWluaW1heCJ9.uCQXSEKXbMU1Vtr3n1TSF1aga59QrYv-19R6qk2ua2WBNwWt_MTAdOUrOUW1EDKilOdRXX7MOYfYZg2s0QVTEU_UA8B4em3Tp8FKk_qzBgQhDMe1QW9Z74QZ3bltTbLtzT1tcrkKHbTHCtB-ttTYAEyR1_oxZ3xiuQ2xn0Uf6b5WQzDua9ijsKIkJIeTntTbK0h-9kEhEkYPApXGCJe6L_YTnhXIhRc4DvKdSJwrTlnzSlI8WcPwLP1wgifhzmSetRFYNv3nXnIhtKYAf0-4PpBYEMBv9hymVbgkkcXAifbdGn-JiCPi874hrX3_89G0Y4xks0eHUKvGTICwaiEo4A",
+        "MINIMAX_API_HOST": "https://api.minimaxi.com"
       }
     }
   }
+}

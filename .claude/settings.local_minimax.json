@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["Bash(find:*)"],
+    "allow": [],
     "deny": []
   },
   "enabledMcpjsonServers": [
@@ -8,7 +8,8 @@
     "playwright",
     "sequential-thinking",
     "antv-chart",
-    "memory"
+    "memory",
+    "MiniMax"
   ],
   "env": {
     "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
