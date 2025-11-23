@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify iframe 登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 700px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 6px;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .steps {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-result {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dify iframe 登录测试</h1>
+
+    <div class="info">
+        <strong>📋 问题诊断结果：</strong><br>
+        ✅ CORS 配置正确<br>
+        ✅ 找到正确的登录 API：<code>/console/api/login</code><br>
+        ✅ 设置了初始管理员密码：admin123456<br>
+        ❌ 但是之前的测试返回 404 - 需要重新测试
+    </div>
+
+    <div class="steps">
+        <h3>🚀 测试步骤：</h3>
+        <ol>
+            <li><button onclick="loadLogin()">加载登录页面</button></li>
+            <li><button onclick="testDirectAPI()">直接测试 API</button></li>
+            <li><button onclick="monitorRequests()">监控网络请求</button></li>
+            <li><button onclick="clearResults()">清除结果</button></li>
+        </ol>
+        <div id="testResult" class="test-result"></div>
+    </div>
+
+    <div class="iframe-container">
+        <iframe id="difyIframe" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        let requestLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            requestLog.push(logEntry);
+
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.textContent = requestLog.join('\n');
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+
+            console.log(logEntry);
+        }
+
+        function loadLogin() {
+            log('加载 Dify 登录页面...');
+            const iframe = document.getElementById('difyIframe');
+            iframe.src = 'http://fy.anyremote.cn:8184/signin';
+
+            iframe.onload = function() {
+                log('iframe 加载完成');
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    log(`当前页面: ${iframeDoc.location.href}`);
+                    log(`页面标题: ${iframeDoc.title}`);
+                } catch (error) {
+                    log(`无法访问 iframe 内容 (跨域限制): ${error.message}`, 'warn');
+                }
+            };
+
+            iframe.onerror = function() {
+                log('iframe 加载失败', 'error');
+            };
+        }
+
+        function testDirectAPI() {
+            log('直接测试登录 API...');
+
+            fetch('http://fy.anyremote.cn:8184/console/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Origin': window.location.origin
+                },
+                body: JSON.stringify({
+                    email: 'admin@example.com',
+                    password: 'admin123456',
+                    remember_me: false
+                }),
+                credentials: 'include'
+            })
+            .then(response => {
+                log(`API 响应状态: ${response.status} ${response.statusText}`);
+
+                // 获取所有响应头
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                    if (key.toLowerCase().includes('set-cookie')) {
+                        log(`Set-Cookie: ${value}`, 'success');
+                    }
+                });
+
+                return response.text();
+            })
+            .then(data => {
+                log(`API 响应内容: ${data.substring(0, 200)}...`);
+            })
+            .catch(error => {
+                log(`API 请求失败: ${error.message}`, 'error');
+            });
+        }
+
+        function monitorRequests() {
+            log('设置网络请求监控...');
+
+            // 监听 iframe 中的网络请求（如果可能）
+            const iframe = document.getElementById('difyIframe');
+
+            try {
+                const iframeWindow = iframe.contentWindow;
+
+                // 重新定义 fetch 来监控请求
+                const originalFetch = iframeWindow.fetch;
+                iframeWindow.fetch = function(...args) {
+                    log(`Fetch 请求: ${args[0]} ${args[1] ? JSON.stringify(args[1]) : ''}`);
+                    return originalFetch.apply(this, args);
+                };
+
+                log('网络监控已设置');
+            } catch (error) {
+                log(`无法设置网络监控: ${error.message}`, 'warn');
+            }
+        }
+
+        function clearResults() {
+            requestLog = [];
+            document.getElementById('testResult').textContent = '等待测试结果...';
+        }
+
+        // 页面加载时自动开始
+        window.addEventListener('load', function() {
+            log('页面加载完成，开始测试');
+            log('请按照步骤进行测试，特别注意登录 API 的响应');
+
+            // 自动加载登录页面
+            setTimeout(loadLogin, 1000);
+        });
+    </script>
+</body>
+</html>

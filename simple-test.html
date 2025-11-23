@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单代理测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>代理测试页面</h1>
+
+    <div class="input-group">
+        <label>代理URL：</label><br>
+        <input type="text" id="proxyUrl" placeholder="http://localhost:5005/proxy/session123/" value="http://localhost:5005/proxy/sess_test123/">
+        <button onclick="loadIframe()">加载</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <iframe id="testFrame" onload="onFrameLoad()" onerror="onFrameError()"></iframe>
+
+    <script>
+        function log(msg, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString();
+            statusDiv.className = 'status ' + type;
+            statusDiv.textContent = `[${timestamp}] ${type.toUpperCase()}: ${msg}`;
+            console.log(`[${timestamp}] ${type.toUpperCase()}: ${msg}`);
+        }
+
+        function onFrameLoad() {
+            log('iframe 加载成功！', 'success');
+        }
+
+        function onFrameError() {
+            log('iframe 加载失败', 'error');
+        }
+
+        function loadIframe() {
+            const url = document.getElementById('proxyUrl').value.trim();
+            if (!url) {
+                log('请输入代理URL', 'error');
+                return;
+            }
+
+            log('正在加载: ' + url);
+            document.getElementById('testFrame').src = url;
+        }
+
+        // 页面加载后自动加载默认URL
+        window.addEventListener('load', function() {
+            log('页面已加载，准备测试代理');
+            log('当前时间: ' + new Date().toLocaleString());
+        });
+    </script>
+</body>
+</html>

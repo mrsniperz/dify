@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify iframe 认证解决方案</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .solution-container {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 6px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message-log {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .auth-status {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Dify iframe 认证解决方案</h1>
+
+    <div class="auth-status" id="authStatus">
+        <strong>认证状态:</strong> <span id="statusText">等待测试...</span>
+    </div>
+
+    <div class="solution-container">
+        <h3>📋 问题分析：</h3>
+        <p>既然正常页面可以登录但 iframe 无法登录，这是典型的 iframe 环境认证问题。常见原因：</p>
+        <ul>
+            <li>Cookie SameSite 属性阻止 iframe 使用</li>
+            <li>Session 存储在 localStorage，无法跨域访问</li>
+            <li>浏览器安全策略限制</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <button onclick="loadLogin()">1. 加载登录页面</button>
+        <button onclick="testAuthStatus()">2. 检查认证状态</button>
+        <button onclick="tryPostMessageAuth()">3. 尝试 postMessage 方案</button>
+        <button onclick="clearLog()">清除日志</button>
+    </div>
+
+    <div class="iframe-container">
+        <iframe id="difyIframe" src="about:blank"></iframe>
+    </div>
+
+    <div class="message-log" id="messageLog">
+        等待操作...
+    </div>
+
+    <script>
+        let authToken = null;
+        let authStatus = false;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+
+            const logDiv = document.getElementById('messageLog');
+            logDiv.textContent = logDiv.textContent + '\n' + logEntry;
+            logDiv.scrollTop = logDiv.scrollHeight;
+
+            console.log(logEntry);
+        }
+
+        function updateStatus(isAuthenticated, message = '') {
+            authStatus = isAuthenticated;
+            const statusText = document.getElementById('statusText');
+            const statusDiv = document.getElementById('authStatus');
+
+            if (isAuthenticated) {
+                statusText.textContent = '✅ 已认证';
+                statusDiv.style.backgroundColor = '#d4edda';
+            } else {
+                statusText.textContent = '❌ 未认证 - ' + message;
+                statusDiv.style.backgroundColor = '#f8d7da';
+            }
+        }
+
+        function loadLogin() {
+            log('加载 Dify 登录页面...');
+            const iframe = document.getElementById('difyIframe');
+            iframe.src = 'http://fy.anyremote.cn:8184/signin';
+
+            // 设置 postMessage 监听器
+            window.addEventListener('message', function(event) {
+                // 只处理来自 Dify 的消息
+                if (event.origin !== 'http://fy.anyremote.cn:8184') {
+                    return;
+                }
+
+                log(`收到 iframe 消息: ${JSON.stringify(event.data)}`);
+
+                switch(event.data.type) {
+                    case 'LOGIN_SUCCESS':
+                        authToken = event.data.token;
+                        updateStatus(true, '登录成功');
+                        log('✅ 登录成功，token: ' + (authToken ? '已获取' : '未获取'));
+                        break;
+                    case 'LOGIN_ERROR':
+                        updateStatus(false, event.data.message);
+                        break;
+                    case 'AUTH_STATUS':
+                        updateStatus(event.data.authenticated, event.data.message);
+                        break;
+                    case 'SET_COOKIE':
+                        // 处理 Cookie 设置
+                        if (event.data.cookies) {
+                            log(`收到 Cookie: ${JSON.stringify(event.data.cookies)}`);
+                        }
+                        break;
+                    default:
+                        log(`未知消息类型: ${event.data.type}`);
+                }
+            });
+
+            iframe.onload = function() {
+                log('iframe 加载完成');
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    log(`当前页面: ${iframeDoc.location.href}`);
+                } catch (error) {
+                    log(`无法访问 iframe 内容: ${error.message}`, 'warn');
+                }
+            };
+
+            iframe.onerror = function() {
+                log('iframe 加载失败', 'error');
+            };
+        }
+
+        function testAuthStatus() {
+            log('测试 iframe 认证状态...');
+            const iframe = document.getElementById('difyIframe');
+
+            iframe.contentWindow.postMessage({
+                type: 'CHECK_AUTH_STATUS',
+                timestamp: Date.now()
+            }, '*');
+        }
+
+        function tryPostMessageAuth() {
+            log('尝试 postMessage 认证方案...');
+
+            // 向 iframe 发送认证检查请求
+            const iframe = document.getElementById('difyIframe');
+
+            // 方法1: 询问 iframe 是否已登录
+            iframe.contentWindow.postMessage({
+                type: 'PROMPT_LOGIN',
+                message: '请在 iframe 中登录，然后此页面将自动检测登录状态',
+                timestamp: Date.now()
+            }, '*');
+
+            // 方法2: 尝试获取认证信息
+            setTimeout(() => {
+                iframe.contentWindow.postMessage({
+                    type: 'GET_AUTH_INFO',
+                    timestamp: Date.now()
+                }, '*');
+            }, 2000);
+        }
+
+        function clearLog() {
+            document.getElementById('messageLog').textContent = '日志已清除...';
+        }
+
+        // 页面加载时的说明
+        window.addEventListener('load', function() {
+            log('iframe 认证解决方案页面已加载');
+            log('注意：这个解决方案需要在 Dify 前端页面中添加 postMessage 支持');
+            log('如果 iframe 中无法添加 postMessage 代码，可能需要其他解决方案');
+            updateStatus(false, '等待测试');
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,36 @@
 # Please do not directly edit this file. Instead, modify the .env variables related to NGINX configuration.
 
+# CORS headers - allow specific origins with credentials
+# 使用$http_origin动态设置允许的源,而不是使用通配符*
+# 这样可以支持credentials: 'include'模式
+
+set $cors_origin "";
+if ($http_origin ~* ^https?://(fy\.anyremote\.cn)(:[0-9]+)?$) {
+    set $cors_origin $http_origin;
+}
+
+# If no specific origin matched, allow the current host
+if ($cors_origin = "") {
+    set $cors_origin "$scheme://$host:$server_port";
+}
+
+add_header 'Access-Control-Allow-Origin' $cors_origin always;
+add_header 'Access-Control-Allow-Credentials' 'true' always;
+add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH' always;
+add_header 'Access-Control-Allow-Headers' 'DNT, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Content-Type, Range, Authorization' always;
+
+# Handle preflight OPTIONS requests
+if ($request_method = 'OPTIONS') {
+    add_header 'Access-Control-Allow-Origin' $cors_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH' always;
+    add_header 'Access-Control-Allow-Headers' 'DNT, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Content-Type, Range, Authorization' always;
+    add_header 'Access-Control-Max-Age' 1728000 always;
+    add_header 'Content-Type' 'text/plain; charset=utf-8';
+    add_header 'Content-Length' 0;
+    return 204;
+}
+
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;

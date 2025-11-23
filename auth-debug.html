@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iframe 认证诊断工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .iframe-container {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+            height: 600px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .log-container {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            font-family: monospace;
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        .log-error { color: #dc3545; }
+        .log-warn { color: #ffc107; }
+        .log-info { color: #17a2b8; }
+        .log-success { color: #28a745; }
+        .solutions {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .solutions h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .solutions ul {
+            margin-bottom: 0;
+        }
+        .solutions li {
+            margin-bottom: 8px;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>iframe 认证诊断工具</h1>
+
+    <div class="warning">
+        <strong>⚠️ 注意:</strong> 从你提供的日志来看，这是典型的 iframe 会话/认证问题。页面可以加载，但登录状态无法保持。
+    </div>
+
+    <div class="container">
+        <h3>🔧 诊断步骤</h3>
+
+        <div class="input-group">
+            <label for="targetUrl">目标URL:</label>
+            <input type="url" id="targetUrl" value="http://fy.anyremote.cn:8184" placeholder="输入要测试的URL">
+        </div>
+
+        <div>
+            <button onclick="testBasicIframe()">1. 基础 iframe 测试</button>
+            <button onclick="testWithSameOrigin()">2. 尝试 SameOrigin 策略</button>
+            <button onclick="testPostMessageAuth()">3. 测试 PostMessage 通信</button>
+            <button onclick="testCookieDomains()">4. 检查 Cookie 域</button>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <button onclick="openInNewTab()">在新标签页中打开（对比测试）</button>
+            <button onclick="clearLogs()">清除日志</button>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <div class="container">
+            <h3>iframe 测试区域</h3>
+            <div class="iframe-container">
+                <iframe id="testFrame" name="testFrame"></iframe>
+            </div>
+        </div>
+
+        <div>
+            <div class="container">
+                <h3>📊 实时日志</h3>
+                <div id="logContainer" class="log-container">
+                    <div class="log-entry log-info">等待测试开始...</div>
+                </div>
+            </div>
+
+            <div class="container">
+                <h3>🍪 Cookie 信息</h3>
+                <div id="cookieInfo">
+                    <div class="log-entry log-info">点击下方按钮检查 Cookie</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="solutions">
+        <h3>💡 常见解决方案</h3>
+        <ul>
+            <li><strong>SameSite Cookie 属性:</strong> 确保服务器设置的 Cookie 不是 SameSite=Strict 或 SameSite=Lax</li>
+            <li><strong>iframe 策略:</strong> 检查服务器的 Content-Security-Policy 和 X-Frame-Options</li>
+            <li><strong>会话存储:</strong> iframe 中的 localStorage/sessionStorage 可能无法正常工作</li>
+            <li><strong>域名配置:</strong> 确保父页面和 iframe 页面的域名配置正确</li>
+            <li><strong>HTTPS 要求:</strong> 某些认证 Cookie 可能要求 HTTPS</li>
+        </ul>
+    </div>
+
+    <script>
+        let logEntries = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, type };
+            logEntries.push(logEntry);
+
+            const logContainer = document.getElementById('logContainer');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry log-${type}`;
+            logDiv.textContent = `[${timestamp}] ${message}`;
+
+            logContainer.appendChild(logDiv);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearLogs() {
+            logEntries = [];
+            document.getElementById('logContainer').innerHTML =
+                '<div class="log-entry log-info">日志已清除，等待新的测试...</div>';
+        }
+
+        function testBasicIframe() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                log('请输入有效的URL', 'error');
+                return;
+            }
+
+            log('开始基础 iframe 测试...', 'info');
+            const iframe = document.getElementById('testFrame');
+
+            try {
+                iframe.src = url;
+                log(`iframe 源设置为: ${url}`, 'success');
+
+                // 监听 iframe 消息
+                window.addEventListener('message', handleMessage);
+
+            } catch (error) {
+                log(`iframe 设置失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testWithSameOrigin() {
+            log('测试 SameOrigin 策略...', 'info');
+
+            // 检查当前域名和目标域名
+            const targetUrl = document.getElementById('targetUrl').value;
+            const targetOrigin = new URL(targetUrl).origin;
+            const currentOrigin = window.location.origin;
+
+            log(`当前域名: ${currentOrigin}`, 'info');
+            log(`目标域名: ${targetOrigin}`, 'info');
+
+            if (targetOrigin !== currentOrigin) {
+                log('域名不匹配，iframe 可能遇到跨域问题', 'warn');
+                log('建议：将测试页面部署到相同的域名下', 'warn');
+            } else {
+                log('域名匹配，应该不会有跨域问题', 'success');
+            }
+        }
+
+        function testPostMessageAuth() {
+            log('设置 PostMessage 通信监听...', 'info');
+
+            // 重新设置消息监听器
+            window.removeEventListener('message', handleMessage);
+            window.addEventListener('message', handleMessage);
+
+            // 尝试向 iframe 发送消息
+            setTimeout(() => {
+                try {
+                    const iframe = document.getElementById('testFrame');
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'AUTH_TEST',
+                            timestamp: Date.now()
+                        }, '*');
+                        log('已向 iframe 发送认证测试消息', 'success');
+                    }
+                } catch (error) {
+                    log(`无法向 iframe 发送消息: ${error.message}`, 'error');
+                }
+            }, 2000);
+        }
+
+        function handleMessage(event) {
+            log(`收到来自 ${event.origin} 的消息`, 'info');
+            log(`消息内容: ${JSON.stringify(event.data)}`, 'info');
+        }
+
+        function testCookieDomains() {
+            log('检查 Cookie 信息...', 'info');
+
+            // 显示当前页面的 Cookie
+            const cookies = document.cookie;
+            if (cookies) {
+                log(`当前页面 Cookie: ${cookies}`, 'info');
+            } else {
+                log('当前页面没有 Cookie', 'warn');
+            }
+
+            // 显示域名信息
+            log(`当前域名: ${window.location.hostname}`, 'info');
+            log(`当前协议: ${window.location.protocol}`, 'info');
+            log(`当前端口: ${window.location.port}`, 'info');
+
+            // 更新 Cookie 信息显示
+            document.getElementById('cookieInfo').innerHTML =
+                `<div class="log-entry log-info">域名: ${window.location.hostname}</div>
+                 <div class="log-entry log-info">协议: ${window.location.protocol}</div>
+                 <div class="log-entry log-info">端口: ${window.location.port}</div>
+                 <div class="log-entry log-info">Cookie: ${cookies || '无'}</div>`;
+        }
+
+        function openInNewTab() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (url) {
+                window.open(url, '_blank');
+                log(`已在新标签页中打开: ${url}`, 'success');
+                log('请在新标签页中测试登录功能，然后对比 iframe 中的行为', 'info');
+            } else {
+                log('请先输入URL', 'error');
+            }
+        }
+
+        // 监听 iframe 加载事件
+        document.getElementById('testFrame').onload = function() {
+            log('iframe 加载完成', 'success');
+
+            try {
+                const iframe = this;
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                log(`iframe 标题: ${iframeDoc.title}`, 'info');
+
+                // 检查是否有登录表单
+                const loginForms = iframeDoc.querySelectorAll('form');
+                if (loginForms.length > 0) {
+                    log(`发现 ${loginForms.length} 个表单，可能包含登录表单`, 'info');
+                }
+
+            } catch (error) {
+                log(`无法访问 iframe 内容 (跨域限制): ${error.message}`, 'warn');
+                log('这是正常的，跨域 iframe 无法直接访问其内容', 'info');
+            }
+        };
+
+        document.getElementById('testFrame').onerror = function() {
+            log('iframe 加载失败', 'error');
+        };
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', function() {
+            log('认证诊断工具已加载', 'success');
+            log('请按照步骤进行测试，或在新标签页中对比测试', 'info');
+        });
+    </script>
+</body>
+</html>

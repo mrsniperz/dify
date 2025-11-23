@@ -1,0 +1,13 @@
+{
+  "name": "iframe-tester",
+  "version": "1.0.0",
+  "description": "iframe 访问测试工具",
+  "main": "test-iframe.js",
+  "scripts": {
+    "test": "node test-iframe.js",
+    "test-local": "node test-iframe.js http://localhost:3000"
+  },
+  "keywords": ["iframe", "cors", "security", "testing"],
+  "author": "Dify Test Tool",
+  "license": "MIT"
+}

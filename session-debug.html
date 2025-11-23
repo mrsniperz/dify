@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify iframe 会话诊断</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .iframe-container {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            height: 600px;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .log-container {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .cookie-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .solutions {
+            background-color: #fff;
+            border: 2px solid #007bff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .test-step {
+            background-color: #fff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dify iframe 会话诊断工具</h1>
+
+    <div class="warning">
+        <strong>当前问题分析：</strong><br>
+        ✅ iframe 可以加载页面 - 跨域配置正确<br>
+        ✅ 可以访问登录页面 - 基本连接正常<br>
+        ❌ 登录后状态无法保持 - 会话/Cookie 问题
+    </div>
+
+    <div class="test-step">
+        <h3>📋 测试步骤 1: 基础诊断</h3>
+        <button onclick="checkEnvironment()">检查当前环境</button>
+        <button onclick="testDirectAccess()">直接访问测试</button>
+        <div id="envInfo" class="info" style="display:none;"></div>
+    </div>
+
+    <div class="test-step">
+        <h3>📋 测试步骤 2: Cookie 分析</h3>
+        <button onclick="analyzeCookies()">分析当前 Cookie</button>
+        <button onclick="testCookieDomain()">测试 Cookie 域</button>
+        <div id="cookieAnalysis" class="info" style="display:none;"></div>
+    </div>
+
+    <div class="test-step">
+        <h3>📋 测试步骤 3: iframe 会话测试</h3>
+        <button onclick="testIframeSession()">iframe 会话测试</button>
+        <button onclick="testPostMessageLogin()">PostMessage 登录测试</button>
+        <div id="sessionTest" class="info" style="display:none;"></div>
+    </div>
+
+    <div class="two-column">
+        <div class="test-step">
+            <h3>📋 iframe 测试区域</h3>
+            <div class="iframe-container">
+                <iframe id="testFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+
+        <div>
+            <div class="test-step">
+                <h3>📋 实时日志</h3>
+                <div id="logContainer" class="log-container">
+                    <div>等待开始测试...</div>
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>📋 诊断建议</h3>
+                <div id="suggestions" class="cookie-info">
+                    <div>完成测试后查看诊断建议</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="solutions">
+        <h3>🛠️ 常见解决方案</h3>
+        <div id="solutionDetails">
+            <p><strong>根据测试结果，可能的解决方案：</strong></p>
+            <ol>
+                <li><strong>Cookie SameSite 问题：</strong>服务器需要设置 SameSite=None; Secure</li>
+                <li><strong>域名配置：</strong>确保 COOKIE_DOMAIN 配置正确</li>
+                <li><strong>Session 存储：</strong>可能需要使用 URL 参数传递认证信息</li>
+                <li><strong>PostMessage 方案：</strong>在父页面和 iframe 之间传递认证状态</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        let testResults = {};
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({ timestamp, message, type });
+
+            const logContainer = document.getElementById('logContainer');
+            const logDiv = document.createElement('div');
+            logDiv.innerHTML = `<span style="color: ${type === 'error' ? 'red' : type === 'warn' ? 'orange' : type === 'success' ? 'green' : 'black'}>[${timestamp}] ${message}</span>`;
+            logContainer.appendChild(logDiv);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function checkEnvironment() {
+            log('🔍 检查环境配置...');
+            const envInfo = document.getElementById('envInfo');
+
+            const info = {
+                当前URL: window.location.href,
+                当前域名: window.location.hostname,
+                当前端口: window.location.port,
+                当前协议: window.location.protocol,
+                UserAgent: navigator.userAgent.substring(0, 50) + '...',
+                当前Cookie: document.cookie || '无Cookie'
+            };
+
+            envInfo.innerHTML = '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+            envInfo.style.display = 'block';
+
+            log(`环境检查完成，当前域名: ${window.location.hostname}`, 'success');
+        }
+
+        function testDirectAccess() {
+            log('🔍 测试直接访问 dify...');
+            const testWindow = window.open('http://fy.anyremote.cn:8184', '_blank');
+
+            setTimeout(() => {
+                if (testWindow && !testWindow.closed) {
+                    log('✅ 直接访问成功，请在新窗口中测试登录功能', 'success');
+                    log('📝 如果直接访问可以正常登录，说明问题在于 iframe 环境', 'info');
+                } else {
+                    log('❌ 直接访问失败或窗口被关闭', 'error');
+                }
+            }, 2000);
+        }
+
+        function analyzeCookies() {
+            log('🔍 分析当前 Cookie 设置...');
+            const cookieAnalysis = document.getElementById('cookieAnalysis');
+
+            // 检查当前页面的 Cookie
+            const cookies = document.cookie;
+            const cookieObj = {};
+
+            if (cookies) {
+                cookies.split(';').forEach(cookie => {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name) cookieObj[name] = value || '';
+                });
+            }
+
+            const analysis = {
+                当前页面Cookie: cookieObj,
+                Cookie数量: Object.keys(cookieObj).length,
+                包含认证相关Cookie: Object.keys(cookieObj).filter(key =>
+                    key.toLowerCase().includes('session') ||
+                    key.toLowerCase().includes('token') ||
+                    key.toLowerCase().includes('auth')
+                )
+            };
+
+            cookieAnalysis.innerHTML = '<pre>' + JSON.stringify(analysis, null, 2) + '</pre>';
+            cookieAnalysis.style.display = 'block';
+
+            log(`Cookie 分析完成，发现 ${Object.keys(cookieObj).length} 个 Cookie`, 'success');
+        }
+
+        function testCookieDomain() {
+            log('🔍 测试 Cookie 域设置...');
+
+            // 尝试设置一个测试 Cookie
+            const testCookieName = 'iframe_test_' + Date.now();
+            document.cookie = `${testCookieName}=test_value; SameSite=None; Secure; path=/`;
+
+            setTimeout(() => {
+                const hasTestCookie = document.cookie.includes(testCookieName);
+                log(`Cookie 域测试: ${hasTestCookie ? '✅ 支持 SameSite=None' : '❌ 不支持 SameSite=None'}`, hasTestCookie ? 'success' : 'error');
+
+                // 清理测试 Cookie
+                document.cookie = `${testCookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            }, 500);
+        }
+
+        function testIframeSession() {
+            log('🔍 开始 iframe 会话测试...');
+            const iframe = document.getElementById('testFrame');
+            const sessionTest = document.getElementById('sessionTest');
+
+            // 加载登录页面
+            iframe.src = 'http://fy.anyremote.cn:8184/signin';
+
+            sessionTest.innerHTML = `
+                <div>iframe 已加载登录页面</div>
+                <div>请尝试在 iframe 中登录，然后观察以下情况：</div>
+                <div>1. 登录后是否跳转到主页</div>
+                <div>2. 是否仍然显示登录页面</div>
+                <div>3. 浏览器开发者工具 Network 标签中的请求状态</div>
+            `;
+            sessionTest.style.display = 'block';
+        }
+
+        function testPostMessageLogin() {
+            log('🔍 测试 PostMessage 通信...');
+
+            // 监听 iframe 消息
+            const messageHandler = (event) => {
+                if (event.origin === 'http://fy.anyremote.cn:8184') {
+                    log(`收到来自 iframe 的消息: ${JSON.stringify(event.data)}`, 'info');
+
+                    if (event.data.type === 'LOGIN_SUCCESS') {
+                        log('✅ 检测到登录成功消息', 'success');
+                        updateSuggestions('success');
+                    }
+                }
+            };
+
+            window.addEventListener('message', messageHandler);
+
+            log('PostMessage 监听器已设置', 'success');
+            log('现在可以在 iframe 中尝试登录，系统会检测登录状态', 'info');
+        }
+
+        function updateSuggestions(result) {
+            const suggestions = document.getElementById('suggestions');
+            const solutionDetails = document.getElementById('solutionDetails');
+
+            let recommendations = [];
+
+            if (result === 'success') {
+                recommendations = [
+                    '✅ PostMessage 通信正常，可以使用此方案传递认证信息',
+                    '✅ 建议在 iframe 登录成功后，通过 postMessage 将 token 传递给父页面',
+                    '📝 实现步骤：1. 修改 dify 登录页面 2. 添加 postMessage 通信 3. 父页面接收并存储 token'
+                ];
+            } else {
+                recommendations = [
+                    '❌ iframe 会话无法正常工作，需要服务器端配置修改',
+                    '🔧 建议的解决方案：',
+                    '1. 修改服务器 Cookie 配置：Set-Cookie: sessionid=...; SameSite=None; Secure; HttpOnly',
+                    '2. 配置 COOKIE_DOMAIN 环境变量为正确的域名',
+                    '3. 确保 NGINX 代理正确转发认证头部',
+                    '4. 考虑使用 URL 参数或 postMessage 传递认证信息'
+                ];
+            }
+
+            suggestions.innerHTML = '<pre>' + recommendations.join('\n') + '</pre>';
+            solutionDetails.innerHTML = `<p><strong>详细解决方案：</strong></p><pre>${recommendations.join('\n')}</pre>`;
+        }
+
+        // iframe 加载完成监听
+        document.getElementById('testFrame').onload = function() {
+            try {
+                const iframeDoc = this.contentDocument || this.contentWindow.document;
+                log(`iframe 加载完成，当前页面: ${iframeDoc.location.href}`, 'success');
+
+                // 检查是否是登录页面
+                if (iframeDoc.location.href.includes('/signin')) {
+                    log('iframe 显示登录页面，用户需要登录', 'info');
+                } else if (iframeDoc.location.href.includes('/console')) {
+                    log('iframe 显示控制台页面，可能已登录', 'success');
+                    updateSuggestions('success');
+                }
+
+            } catch (error) {
+                log(`iframe 加载完成，但由于跨域限制无法访问内容: ${error.message}`, 'warn');
+            }
+        };
+
+        // 初始化
+        window.addEventListener('load', function() {
+            log('iframe 会话诊断工具已加载', 'success');
+            log('请按步骤进行测试以确定问题原因', 'info');
+        });
+    </script>
+</body>
+</html>
